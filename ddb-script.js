@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         DDB Book Downloader Full Implementation
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Fully functional DDB book downloader with content compilation.
 // @author       Code Wizard
 // @match        https://www.dndbeyond.com/sources/*
@@ -55,12 +55,13 @@
         let compiledContent = pages.join(
           '<div style="page-break-after: always;"></div>'
         );
+        let bookTitle = $(".compendium-title").text();
         let bookContent = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <title>Compiled Book</title>
+                <title>${bookTitle}</title>
                 <style>
                     body {
                         width: 210mm;

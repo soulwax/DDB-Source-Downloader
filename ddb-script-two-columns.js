@@ -1,6 +1,6 @@
 /* globals jQuery, $ */
 // ==UserScript==
-// @name         DDB Book Downloader Full Implementation
+// @name         DDB Book Downloader Full Implementation Two Columns
 // @namespace    http://tampermonkey.net/
 // @version      1.1
 // @description  Fully functional DDB book downloader with content compilation.
