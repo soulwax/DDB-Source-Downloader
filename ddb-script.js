@@ -1,77 +1,107 @@
 /* globals jQuery, $ */
 // ==UserScript==
-// @name         DDB Book Downloader Enhanced
+// @name         DDB Book Downloader Full Implementation
 // @namespace    http://tampermonkey.net/
-// @version      0.3
-// @description  Save your DDB books to PDF with improved content loading!
-// @author       Enhanced by Code Wizard
+// @version      1.1
+// @description  Fully functional DDB book downloader with content compilation.
+// @author       Code Wizard
 // @match        https://www.dndbeyond.com/sources/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=dndbeyond.com
 // @require      https://code.jquery.com/jquery-3.6.3.min.js
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function () {
   "use strict";
 
-  $(document).ready(function () {
-    let bookTitle = document.title;
-    let contentStorage = {};
-    let contentOrder = [];
+  function addDownloadButton() {
+    if ($("#compilePDF").length === 0) {
+      $(
+        '<button id="compilePDF" style="margin-top: 20px;">Compile PDF</button>'
+      )
+        .insertAfter(".compendium-toc-full-text")
+        .on("click", compileBook);
+    }
+  }
 
-    function fetchPageContent(url, index) {
-      return $.get(url, function (data) {
+  function fetchPageContent(url) {
+    return $.get(url)
+      .then(function (data) {
         let pageContent = $("<div>")
           .append($.parseHTML(data))
-          .find(".p-article-content")
+          .find(".p-article-content, .article-content")
           .html();
-        contentStorage[index] = pageContent;
+        return pageContent
+          ? pageContent
+          : "<p>Content not found for " + url + "</p>";
+      })
+      .fail(function () {
+        return "<p>Failed to load content from " + url + "</p>";
       });
-    }
+  }
 
-    function compileBook() {
-      let compiledContent = contentOrder
-        .map((index) => contentStorage[index])
-        .join('<div style="page-break-after: always;"></div>');
-      return (
-        "<!DOCTYPE html>" +
-        '<html lang="en"><head><meta charset="UTF-8"><title>' +
-        bookTitle +
-        "</title>" +
-        '<link rel="stylesheet" href="https://www.dndbeyond.com/content/1-0-2352-0/skins/blocks/css/compiled.css"/>' +
-        '<link rel="stylesheet" href="https://www.dndbeyond.com/content/1-0-2352-0/skins/waterdeep/css/compiled.css"/>' +
-        '<link rel="stylesheet" type="text/css" href="https://www.dndbeyond.com/api/custom-css" />' +
-        "<style>body {width: 850px; margin-left:30px;}</style>" +
-        "</head><body>" +
-        compiledContent +
-        "</body></html>"
-      );
-    }
-
-    $(".compendium-toc-full-text a")
+  function compileBook() {
+    let pageUrls = $(".compendium-toc-full-text a")
       .not('[href*="#"]')
-      .each(function (index) {
-        let href = $(this).attr("href");
-        contentOrder.push(index);
-        fetchPageContent(href, index);
-      });
+      .map(function () {
+        return $(this).attr("href");
+      })
+      .get();
 
-    $('<button id="compilePDF" type="button">Compile PDF</button>')
-      .insertBefore(".compendium-toc-full-text")
-      .on("click", function () {
-        $.when
-          .apply(
-            $,
-            Object.keys(contentStorage).map((key) => contentStorage[key])
-          )
-          .then(function () {
-            let bookContent = compileBook();
-            let newWindow = window.open();
-            newWindow.document.open();
-            newWindow.document.write(bookContent);
-            newWindow.document.close();
-            $("#compilePDF").prop("disabled", true).text("PDF Compiled");
-          });
+    let contentPromises = pageUrls.map(fetchPageContent);
+
+    Promise.all(contentPromises)
+      .then(function (pages) {
+        let compiledContent = pages.join(
+          '<div style="page-break-after: always;"></div>'
+        );
+        let bookContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Compiled Book</title>
+                <style>
+                    body {
+                        width: 210mm;
+                        margin: auto;
+                        padding: 20mm; /* Adjust padding as needed for inner margins */
+                        font-family: Arial, sans-serif; /* Ensure text is legible */
+                        line-height: 1.5; /* Improve readability */
+                    }
+                    @page {
+                        size: A4;
+                        margin: 20mm; /* Adjust outer margins for print */
+                    }
+                    div.page-break {
+                        page-break-after: always;
+                    }
+                </style>
+            </head>
+            <body>${compiledContent}</body>
+            </html>
+        `;
+
+        let newWindow = window.open();
+        newWindow.document.open();
+        newWindow.document.write(bookContent);
+        newWindow.document.close();
+      })
+      .catch(function (error) {
+        alert("Error compiling book: " + error);
       });
+  }
+
+  $(document).ready(function () {
+    addDownloadButton();
+  });
+
+  const observer = new MutationObserver(function () {
+    addDownloadButton();
+  });
+
+  observer.observe(document, {
+    childList: true,
+    subtree: true,
   });
 })();
