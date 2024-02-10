@@ -18,7 +18,7 @@
       $(
         '<button id="compilePDF" style="margin-top: 20px;">Compile PDF</button>'
       )
-        .insertAfter(".compendium-toc-full-text")
+        .insertAfter("header") // Changed the insertion point to the header element
         .on("click", compileBook);
     }
   }
