@@ -1,12 +1,11 @@
-/* globals jQuery, $ */
 // ==UserScript==
-// @name         DDB Book Downloader Full Implementation
+// @name         DDB Book Downloader Full Implementation with Naming, Cover Art, and Title Header
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Fully functional DDB book downloader with content compilation.
+// @version      1.4
+// @description  Fully functional DDB book downloader with content compilation, cover art, and a title header.
 // @author       Code Wizard
 // @match        https://www.dndbeyond.com/sources/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=dndbeyond.com
+// @icon         https://www.dndbeyond.com/favicon.ico
 // @require      https://code.jquery.com/jquery-3.6.3.min.js
 // @grant        GM_addStyle
 // ==/UserScript==
@@ -50,37 +49,53 @@
 
     let contentPromises = pageUrls.map(fetchPageContent);
 
+    let coverArtUrl = $(".view-cover-art").attr("href");
+    let fullBookTitle = $("h1.page-title").text().trim(); // Extracting the full book title
+
     Promise.all(contentPromises)
       .then(function (pages) {
         let compiledContent = pages.join(
           '<div style="page-break-after: always;"></div>'
         );
-        let bookTitle = $(".compendium-title").text();
         let bookContent = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>${bookTitle}</title>
-                <style>
-                    body {
-                        width: 210mm;
-                        margin: auto;
-                        padding: 20mm; /* Adjust padding as needed for inner margins */
-                        font-family: Arial, sans-serif; /* Ensure text is legible */
-                        line-height: 1.5; /* Improve readability */
-                    }
-                    @page {
-                        size: A4;
-                        margin: 20mm; /* Adjust outer margins for print */
-                    }
-                    div.page-break {
-                        page-break-after: always;
-                    }
-                </style>
-            </head>
-            <body>${compiledContent}</body>
-            </html>
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <title>${fullBookTitle}</title>
+              <style>
+                  body {
+                      width: 210mm;
+                      margin: auto;
+                      padding: 20mm;
+                      font-family: Arial, sans-serif;
+                      line-height: 1.5;
+                  }
+                  @page {
+                      size: A4;
+                      margin: 20mm;
+                  }
+                  div.page-break {
+                      page-break-after: always;
+                  }
+                  .cover-image {
+                      width: 100%;
+                      height: auto;
+                      page-break-after: always;
+                  }
+                  .title-header {
+                      text-align: center;
+                      font-size: 2em;
+                      margin-bottom: 20mm;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="title-header">${fullBookTitle}</div>
+              <img src="${coverArtUrl}" class="cover-image" alt="Cover Art">
+              ${compiledContent}
+          </body>
+          </html>
         `;
 
         let newWindow = window.open();
