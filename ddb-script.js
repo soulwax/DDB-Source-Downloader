@@ -39,6 +39,19 @@
       });
   }
 
+  function resizeImages() {
+    $("img").each(function () {
+      var image = $(this);
+      // Assuming A4 dimensions in pixels at 96 DPI: 794x1123 (width x height)
+      if (image.width() > 794) {
+        image.css("width", "794px");
+      }
+      if (image.height() > 1123) {
+        image.css("height", "1123px");
+      }
+    });
+  }
+
   function compileBook() {
     let pageUrls = $(".compendium-toc-full-text a")
       .not('[href*="#"]')
@@ -54,6 +67,7 @@
 
     Promise.all(contentPromises)
       .then(function (pages) {
+        resizeImages(); // Call to resize images
         let compiledContent = pages.join(
           '<div style="page-break-after: always;"></div>'
         );
@@ -64,31 +78,32 @@
               <meta charset="UTF-8">
               <title>${fullBookTitle}</title>
               <style>
-                  body {
-                      width: 210mm;
-                      margin: auto;
-                      padding: 20mm;
-                      font-family: Arial, sans-serif;
-                      line-height: 1.5;
-                  }
-                  @page {
-                      size: A4;
-                      margin: 20mm;
-                  }
-                  div.page-break {
-                      page-break-after: always;
-                  }
-                  .cover-image {
-                      width: 100%;
-                      height: auto;
-                      page-break-after: always;
-                  }
-                  .title-header {
-                      text-align: center;
-                      font-size: 2em;
-                      margin-bottom: 20mm;
-                  }
-              </style>
+                body {
+                    width: 210mm;
+                    margin: auto;
+                    padding: 20mm;
+                    font-family: Arial, sans-serif;
+                    line-height: 1.5;
+                }
+                @page {
+                    size: A4;
+                    margin: 20mm;
+                }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                .cover-image {
+                    width: 100%;
+                    height: auto;
+                    page-break-after: always;
+                }
+                .title-header {
+                    text-align: center;
+                    font-size: 2em;
+                    margin-bottom: 20mm;
+                }
+            </style>
           </head>
           <body>
               <div class="title-header">${fullBookTitle}</div>
