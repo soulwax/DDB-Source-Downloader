@@ -62,9 +62,9 @@
 
     let contentPromises = pageUrls.map(fetchPageContent);
 
-    let coverArtUrl = $(".view-cover-art").attr("href");
+    let coverArtUrl = $("a.ddb-lightbox-outer").attr("href");
     let fullBookTitle =
-      $("h1.page-title").text().trim() + " - Print Friendly - DNDBeyond"; // Extracting the full book title
+      $("h1.page-title").text().trim() + " - Print Friendly - DNDBeyond";
 
     Promise.all(contentPromises)
       .then(function (pages) {
