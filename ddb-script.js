@@ -63,7 +63,8 @@
     let contentPromises = pageUrls.map(fetchPageContent);
 
     let coverArtUrl = $(".view-cover-art").attr("href");
-    let fullBookTitle = $("h1.page-title").text().trim(); // Extracting the full book title
+    let fullBookTitle =
+      $("h1.page-title").text().trim() + " - Print Friendly - DNDBeyond"; // Extracting the full book title
 
     Promise.all(contentPromises)
       .then(function (pages) {
